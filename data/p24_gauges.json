@@ -1,0 +1,58 @@
+{
+ "gauges": [
+  {
+   "name": "Stockholm",
+   "lat": 59.3,
+   "lon": 18.1,
+   "a": [
+    0.076,
+    1.013,
+    1.072
+   ],
+   "reading": 0.449,
+   "sigma": 0.02
+  },
+  {
+   "name": "Halifax",
+   "lat": 44.7,
+   "lon": -63.6,
+   "a": [
+    0.223,
+    1.23,
+    1.066
+   ],
+   "reading": 0.634,
+   "sigma": 0.01
+  },
+  {
+   "name": "Honolulu",
+   "lat": 21.3,
+   "lon": -157.9,
+   "a": [
+    1.206,
+    1.296,
+    1.213
+   ],
+   "reading": 1.335,
+   "sigma": 0.01
+  },
+  {
+   "name": "Simonstown",
+   "lat": -34.2,
+   "lon": 18.4,
+   "a": [
+    1.209,
+    1.119,
+    0.913
+   ],
+   "reading": 1.315,
+   "sigma": 0.03
+  }
+ ],
+ "true_contributions_mm": {
+  "greenland": 0.7,
+  "west_antarctic": 0.3,
+  "east_antarctic": 0.1
+ },
+ "note": "readings are synthetic: true model plus Gaussian noise of the stated sigma"
+}

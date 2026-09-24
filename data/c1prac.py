@@ -78,7 +78,7 @@ def graticule(ax, step=30, fontsize=8):
         x, y = ax.projection.transform_point(c0 - 180 + 1e-6, la, pc)
         ax.annotate(f"{abs(la)}°{'N' if la > 0 else 'S' if la < 0 else ''}", (x, y), xytext=(-3, 0), textcoords="offset points",
                     ha="right", va="center", fontsize=fontsize, annotation_clip=False)
-    for lo in range(-180 + step, 180, step):
+    for lo in range(-180 + 2 * step, 180, 2 * step):                  # longitude labels every other line, to stay legible on small panels
         x, _ = ax.projection.transform_point(c0 + lo, -89.5, pc)     # the pole itself does not transform
         y = ax.projection.y_limits[0]
         ax.annotate(f"{abs(lo)}°{'E' if lo > 0 else 'W' if lo < 0 else ''}", (x, y), xytext=(0, -3), textcoords="offset points",
@@ -86,12 +86,14 @@ def graticule(ax, step=30, fontsize=8):
 
 
 def global_map(field, lon, lat, *, ax=None, vmin=None, vmax=None, center=None, cmap="RdBu_r", label="", title="",
-               contours=(), ocean=None, sites=None, figsize=(12, 6.5), colorbar=True, grid=True):
+               contours=(), ocean=None, sites=None, figsize=(12, 6.5), colorbar=True, grid=True, coast_field=None):
     """Filled map of a field on a Robinson projection, drawn with pyslfp and cartopy. Longitudes may run 0-360.
 
     field: 2-D array (lat, lon). ocean: optional mask (1 over ocean) that hides land. contours: list
     of levels drawn as black lines (the first solid, the second dashed). sites: dict name -> (lat, lon).
     center: if given, use a two-slope colour scale centred there (for fingerprints).
+    coast_field: if given, a field on the same grid whose zero contour is drawn as the shoreline (for example
+    the sea level of a past epoch) instead of the present-day coastline.
     """
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
@@ -106,20 +108,26 @@ def global_map(field, lon, lat, *, ax=None, vmin=None, vmax=None, center=None, c
     styles = {"linestyles": ["-", "--"][: len(contours)], "linewidths": [1.2, 0.8][: len(contours)]}
     g = _as_shgrid(f, lon, lat)
     if g is not None:
-        _, pm = pyslfp.plot(g, ax=ax, cmap=cmap, gridlines=False, colorbar=False, contour_lines=bool(contours),
-                            levels=list(contours), contour_lines_kwargs=styles, rasterized=True, **scale)
+        _, pm = pyslfp.plot(g, ax=ax, cmap=cmap, gridlines=False, colorbar=False, coasts=coast_field is None,
+                            contour_lines=bool(contours), levels=list(contours), contour_lines_kwargs=styles, rasterized=True, **scale)
     else:
         pm = ax.pcolormesh(lon, lat, f, transform=ccrs.PlateCarree(), cmap=cmap, rasterized=True, **scale)
         if contours:
             ax.contour(lon, lat, f, transform=ccrs.PlateCarree(), levels=list(contours), colors="k", **styles)
-        ax.add_feature(cfeature.COASTLINE, linewidth=0.8)
+        if coast_field is None:
+            ax.add_feature(cfeature.COASTLINE, linewidth=0.8)
+    if coast_field is not None:
+        ax.contour(lon, lat, np.asarray(coast_field, dtype=float), transform=ccrs.PlateCarree(), levels=[0.0], colors="k", linewidths=0.8)
     ax.set_global()
     if grid:
         graticule(ax)
     if sites:
+        placed = []
         for name, (la, lo) in sites.items():
             ax.plot(lo, la, "k^", ms=6, mfc="yellow", transform=ccrs.PlateCarree())
-            ax.annotate(name, ax.projection.transform_point(lo, la, ccrs.PlateCarree()), xytext=(4, 4), textcoords="offset points", fontsize=11)
+            crowded = any(abs(la - la2) < 4 and abs(lo - lo2) < 8 for la2, lo2 in placed)   # a neighbour already labelled: put this label below
+            ax.annotate(name, ax.projection.transform_point(lo, la, ccrs.PlateCarree()), xytext=(4, -12 if crowded else 4), textcoords="offset points", fontsize=11)
+            placed.append((la, lo))
     if colorbar:
         cb = fig.colorbar(pm, ax=ax, orientation="horizontal", shrink=0.6, pad=0.06)
         cb.set_label(label)
