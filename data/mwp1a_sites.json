@@ -1,0 +1,163 @@
+{
+ "sites": [
+  {
+   "name": "Tahiti",
+   "lat": -17.5,
+   "lon": -149.5,
+   "median_m": 21.4,
+   "sigma_m": 3.6,
+   "range95_m": [
+    14.6,
+    29.0
+   ],
+   "a_ours": [
+    1.236,
+    1.038,
+    1.152
+   ],
+   "a_lin": [
+    1.21,
+    0.976,
+    1.09
+   ]
+  },
+  {
+   "name": "Barbados",
+   "lat": 13.1,
+   "lon": -59.5,
+   "median_m": 15.6,
+   "sigma_m": 1.7,
+   "range95_m": [
+    12.5,
+    19.2
+   ],
+   "a_ours": [
+    0.823,
+    1.008,
+    1.207
+   ],
+   "a_lin": [
+    0.821,
+    0.966,
+    1.17
+   ]
+  },
+  {
+   "name": "Sunda Shelf",
+   "lat": 4.0,
+   "lon": 107.0,
+   "median_m": 15.5,
+   "sigma_m": 9.7,
+   "range95_m": [
+    1.1,
+    39.7
+   ],
+   "a_ours": [
+    1.044,
+    0.967,
+    1.077
+   ],
+   "a_lin": [
+    1.08,
+    0.992,
+    1.13
+   ]
+  },
+  {
+   "name": "Hydrographer's Passage",
+   "lat": -19.7,
+   "lon": 150.3,
+   "median_m": 19.9,
+   "sigma_m": 5.7,
+   "range95_m": [
+    10.7,
+    33.3
+   ],
+   "a_ours": [
+    1.057,
+    1.008,
+    1.187
+   ],
+   "a_lin": [
+    1.04,
+    0.966,
+    1.14
+   ]
+  },
+  {
+   "name": "Noggin Pass",
+   "lat": -17.1,
+   "lon": 146.6,
+   "median_m": 19.2,
+   "sigma_m": 6.6,
+   "range95_m": [
+    10.4,
+    36.9
+   ],
+   "a_ours": [
+    1.044,
+    1.009,
+    1.181
+   ],
+   "a_lin": [
+    1.03,
+    0.969,
+    1.13
+   ]
+  },
+  {
+   "name": "NW Scotland",
+   "lat": 57.4,
+   "lon": -5.8,
+   "median_m": 8.5,
+   "sigma_m": 3.6,
+   "range95_m": [
+    4.6,
+    19.0
+   ],
+   "a_ours": [
+    0.743,
+    -0.643,
+    1.134
+   ],
+   "a_lin": [
+    0.753,
+    -0.745,
+    1.09
+   ]
+  }
+ ],
+ "sources": [
+  "north_america",
+  "eurasia",
+  "antarctica"
+ ],
+ "ice7g_sle_m": {
+  "north_america": null,
+  "eurasia": null,
+  "antarctica": null
+ },
+ "lin2021_result_m": {
+  "total": [
+   15.6,
+   17.9,
+   20.1
+  ],
+  "north_america": [
+   4.8,
+   12.0,
+   15.0
+  ],
+  "antarctica": [
+   0.0,
+   1.3,
+   6.7
+  ],
+  "eurasia": [
+   3.2,
+   4.7,
+   6.4
+  ]
+ },
+ "duration_years": 500
+}
