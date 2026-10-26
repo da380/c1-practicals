@@ -196,6 +196,62 @@ def fingerprint(state, load, *, rotation: bool = True) -> dict:
             "uplift": u.data / mean, "geoid": -phi.data / (g * mean)}
 
 
+def gia_run(upper_mantle: float, lower_mantle: float, *, lmax: int = 32, version: str = "ICE6G"):
+    """Forward GIA with pyslfp: the ICE-NG deglaciation from 26 ka to the present in half-kiloyear steps, on PREM with
+    a Maxwell mantle of the given viscosities (Pa s) above and below 670 km and the top 77 km elastic, with migrating
+    shorelines and rotational feedback. The run starts from equilibrium at 26 ka.
+
+    Returns the dates (ka, past first), the pyslfp snapshots at those dates and the pyslfp EarthModel.
+    """
+    from planetmodel import PREM, units
+    import pyslfp as sl
+    from pyslfp.ice import IceNG
+    from pyslfp.love_numbers import Material, graded_mesh
+    from pyslfp.viscoelastic import Rheology, SeaLevelEvolution, ViscoelasticOperator
+    scales = sl.EarthModelParameters.from_defaults().scales
+    prem = PREM(ocean=False).isotropic().converted(scales)
+    mesh = graded_mesh(prem, lmax)
+    pa_s = 1.0 / scales.factor(units.VISCOSITY)
+    eta = {i: lower_mantle * pa_s for i in (2, 3, 4)} | {i: upper_mantle * pa_s for i in (5, 6, 7, 8)}   # PREM layers 9-11 stay elastic
+    operator = ViscoelasticOperator(Rheology.maxwell(Material(mesh, prem), eta), lmax)
+    model = sl.EarthModel.from_planet_model(prem, lmax, mesh=mesh)
+    ice = IceNG(version=version, length_scale=model.parameters.length_scale)
+    dates = np.arange(26.0, -1e-4, -0.5)
+    state = sl.EarthState.from_ice_model(ice, float(dates[0]), model)
+    snapshots, _ = SeaLevelEvolution(operator, state).run_ice_history(dates, ice, shorelines="migrating")
+    return dates, snapshots, model
+
+
+NEAR_FIELD = {"Richmond Gulf": (56.3, -76.5), "James Bay": (53.0, -80.0), "Angerman River": (62.9, 17.9)}
+GIA_RUNS = {}
+
+
+def gia_decay(upper_mantle: float, lower_mantle: float, *, lmax: int = 32) -> dict:
+    """Run the GIA model for a pair of viscosities (cached, so a repeated pair costs nothing) and return the ages, the
+    relative sea level records at the near-field sites (minus their present values, in metres) and the decay time of
+    each, from an exact fit of RSL = A (exp(t/tau) - 1) over the last 7.5 ka."""
+    key = (float(upper_mantle), float(lower_mantle), lmax)
+    if key not in GIA_RUNS:
+        dates, snapshots, model = gia_run(*key[:2], lmax=lmax)
+        m = model.parameters.length_scale
+        coeffs = [model.expand_field(s.sea_level_change) for s in snapshots]
+        records, taus = {}, {}
+        sel = dates <= 7.5 + 1e-9
+        for name, (la, lo) in NEAR_FIELD.items():
+            r = m * np.array([c.expand(lat=la, lon=lo, degrees=True) for c in coeffs])
+            records[name] = r - r[-1]
+            taus[name] = fit_decay(dates[sel], records[name][sel], 0.0, taus=np.arange(0.5, 40.0, 0.05))[0]
+        GIA_RUNS[key] = {"ages": dates, "records": records, "tau": taus}
+    return GIA_RUNS[key]
+
+
+def gia_table() -> None:
+    """Print the decay times of every run made so far in this session."""
+    print(f"{'upper mantle':>13} {'lower mantle':>13}   " + "   ".join(f"{n:>14}" for n in NEAR_FIELD) + "   (decay times / ka)")
+    for (um, lm, _), r in GIA_RUNS.items():
+        print(f"{um:13.1e} {lm:13.1e}   " + "   ".join(f"{r['tau'][n]:14.2f}" for n in NEAR_FIELD))
+
+
 def point_value(field, lon, lat, plat, plon):
     """Bilinear interpolation of a (lat, lon) grid at a point. Longitudes may run 0-360 or -180-180."""
     lon = np.asarray(lon, dtype=float)
